@@ -11,26 +11,26 @@ This project has two parts: defining the database schema (SQL table definitions)
 
 ## Functions in tournament.py
 
-** registerPlayer(name) **
+**registerPlayer(name)**
 Returns the number of currently registered players. This function should not use the Python len() function; it should have the database count the players.
 
-** deletePlayers() **
+**deletePlayers()**
 Clear out all the player records from the database.
 
-** reportMatch(winner, loser) **
+**reportMatch(winner, loser)**
 Stores the outcome of a single match between two players in the database.
  Args:
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
 
-** deleteMatches() **
+**deleteMatches()**
 Clear out all the match records from the database.
 
-** playerStandings() **
+**playerStandings()**
 Returns a list of (id, name, wins, matches) for each player, sorted by the number of wins each player has.
 
-** swissPairings() **
+**swissPairings()**
     Returns:
       A list of tuples, each of which contains (id1, name1, id2, name2)
         id1: the first player's unique id
@@ -38,4 +38,15 @@ Returns a list of (id, name, wins, matches) for each player, sorted by the numbe
         id2: the second player's unique id
         name2: the second player's name
     """
+## System requirements:
+- PostgreSQL
+- Python 2.7
 
+# Clone the git repository and cd into your desired folder of the cloned directory.
+git clone https://github.com/avastamin/swiss_tournament_result.git
+
+# run sql to create the database schema
+psql -f tournaments.sql
+
+# to run tests, tournaments_test.py
+python tournaments_test.py
