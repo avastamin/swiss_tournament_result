@@ -42,11 +42,11 @@ Returns a list of (id, name, wins, matches) for each player, sorted by the numbe
 - PostgreSQL
 - Python 2.7
 
-# Clone the git repository and cd into your desired folder of the cloned directory.
+### Clone the git repository and cd into your desired folder of the cloned directory.
 git clone https://github.com/avastamin/swiss_tournament_result.git
 
-# run sql to create the database schema
+### run sql to create the database schema
 psql -f tournaments.sql
 
-# to run tests, tournaments_test.py
+### To run tests, tournaments_test.py
 python tournaments_test.py
