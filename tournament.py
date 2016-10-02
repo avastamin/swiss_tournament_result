@@ -2,40 +2,52 @@
 # 
 # tournament.py -- implementation of a Swiss-system tournament
 #
-
+from contextlib import contextmanager
 import psycopg2
 
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
-    return psycopg2.connect("dbname=tournament")
+    try:
+        return psycopg2.connect("dbname=tournament")
+    except:
+        print("Connection failed")
+
+@contextmanager
+def get_cursor():
+    """
+    Query helper function using context lib. Creates a cursor from a database
+    connection object, and performs queries using that cursor.
+    """
+    DB = connect()
+    cursor = DB.cursor()
+    try:
+        yield cursor
+    except:
+        raise
+    else:
+        DB.commit()
+    finally:
+        cursor.close()
+        DB.close()
 
 
 def deleteMatches():
     """Remove all the match records from the database."""
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM matches")
-    conn.commit()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute("DELETE FROM matches")
 
 def deletePlayers():
     """Remove all the player records from the database."""
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM players")
-    conn.commit()
-    conn.close()
+    with get_cursor() as cursor:
+        cursor.execute("DELETE FROM players")
 
 def countPlayers():
     """Returns the number of players currently registered."""
-    conn = connect()
-    cur = conn.cursor()
-
-    cur.execute("SELECT count(*)  FROM players")
-    numberofplayers = cur.fetchone()[0]
-    conn.close()
-    return numberofplayers
+    with get_cursor() as cursor:
+        cursor.execute("SELECT count(*)  FROM players")
+        numberofplayers = cursor.fetchone()[0]
+        return numberofplayers
 
 
 def registerPlayer(name):
@@ -47,16 +59,12 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute("INSERT INTO players (name) VALUES (%s)", (name, ))
+    with get_cursor() as cursor:
+        cursor.execute("INSERT INTO players (name) VALUES (%s)", (name, ))
 
-    cur.execute("SELECT id FROM newPlayerID")
-    latest_player_id = cur.fetchone()
-    cur.execute("INSERT INTO matches VALUES (%s)", (latest_player_id,))
-
-    conn.commit()
-    conn.close()
+        cursor.execute("SELECT id FROM newPlayerID")
+        latest_player_id = cursor.fetchone()
+        cursor.execute("INSERT INTO matches VALUES (%s)", (latest_player_id,))
 
 
 def playerStandings():
@@ -72,14 +80,10 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    conn = connect()
-    cur = conn.cursor()
-
-    cur.execute("SELECT * FROM players_standings")
-    playerstandings = cur.fetchall()
-    conn.commit()
-    conn.close()
-    return playerstandings
+    with get_cursor() as cursor:
+        cursor.execute("SELECT * FROM players_standings")
+        playerstandings = cursor.fetchall()
+        return playerstandings
 
 def reportMatch(winner, loser):
     """Records the outcome of a single match between two players.
@@ -88,16 +92,13 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    conn = connect()
-    cur = conn.cursor()
+    with get_cursor() as cursor:
 
-    cur.execute("UPDATE matches set matches = matches +1"
+        cursor.execute("UPDATE matches set matches = matches +1"
                  "WHERE player_id = %s OR player_id = %s", (winner, loser, ))
 
-    cur.execute("UPDATE matches set wins = wins +1"
+        cursor.execute("UPDATE matches set wins = wins +1"
                 "WHERE player_id = %s", (winner,))
-    conn.commit()
-    conn.close()
  
  
 def swissPairings():
@@ -115,12 +116,10 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-    conn = connect()
-    cur = conn.cursor()
+    with get_cursor() as cursor:
 
-    cur.execute("SELECT id, name FROM players_standings")
-    all_players = cur.fetchall()
-    conn.close()
+        cursor.execute("SELECT id, name FROM players_standings")
+        all_players = cursor.fetchall()
 
     swisspairs = [ ]
     while all_players:
@@ -132,18 +131,17 @@ def swissPairings():
 
 
 def toseeRecords():
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM matches")
-    latest_player_id = cur.fetchall()
-    return latest_player_id
+    with get_cursor() as cursor:
+        cursor.execute("SELECT * FROM matches")
+        latest_player_id = cursor.fetchall()
+        return latest_player_id
 
 #print reportMatch(32,31)
-print (playerStandings())
+print (toseeRecords())
 #deleteMatches()
 #deletePlayers()
-#registerPlayer('playerA')
-#registerPlayer('playerB')
-#registerPlayer('playerC')
-#registerPlayer('playerD')
+registerPlayer('playerA')
+registerPlayer('playerB')
+registerPlayer('playerC')
+registerPlayer('playerD')
 
